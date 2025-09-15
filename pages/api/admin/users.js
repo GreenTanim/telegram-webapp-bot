@@ -1,87 +1,45 @@
-<<<<<<< HEAD
-import { requireAuth } from '../../../lib/auth'
 import { supabase } from '../../../lib/supabase'
 
-async function handler(req, res) {
+function isAdminAuthenticated(req) {
+  const cookies = req.headers.cookie || ''
+  return cookies.includes('admin_logged_in=true')
+}
+
+export default async function handler(req, res) {
+  // Check authentication
+  if (!isAdminAuthenticated(req)) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
   if (req.method === 'GET') {
     try {
-      const { data: users, error } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .select('*')
         .order('created_at', { ascending: false })
 
       if (error) throw error
-
-      res.status(200).json(users)
+      return res.status(200).json(data)
     } catch (error) {
-      console.error('Error fetching users:', error)
-      res.status(500).json({ error: 'Failed to fetch users' })
+      return res.status(500).json({ error: error.message })
     }
-  } else if (req.method === 'PUT') {
-    try {
-      const { id, balance } = req.body
+  }
 
-      const { data: user, error } = await supabase
+  if (req.method === 'PUT') {
+    const { id, balance } = req.body
+
+    try {
+      const { error } = await supabase
         .from('users')
         .update({ balance })
         .eq('id', id)
-        .select()
-        .single()
 
       if (error) throw error
-
-      res.status(200).json(user)
+      return res.status(200).json({ success: true })
     } catch (error) {
-      console.error('Error updating user:', error)
-      res.status(500).json({ error: 'Failed to update user' })
+      return res.status(500).json({ error: error.message })
     }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' })
   }
+
+  return res.status(405).json({ error: 'Method not allowed' })
 }
-
-export default requireAuth(handler)
-=======
-import { requireAuth } from '../../../lib/auth'
-import { supabase } from '../../../lib/supabase'
-
-async function handler(req, res) {
-  if (req.method === 'GET') {
-    try {
-      const { data: users, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-
-      res.status(200).json(users)
-    } catch (error) {
-      console.error('Error fetching users:', error)
-      res.status(500).json({ error: 'Failed to fetch users' })
-    }
-  } else if (req.method === 'PUT') {
-    try {
-      const { id, balance } = req.body
-
-      const { data: user, error } = await supabase
-        .from('users')
-        .update({ balance })
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      res.status(200).json(user)
-    } catch (error) {
-      console.error('Error updating user:', error)
-      res.status(500).json({ error: 'Failed to update user' })
-    }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' })
-  }
-}
-
-export default requireAuth(handler)
->>>>>>> ab0bea77bf4ea80bfdb82b515bed3d52fb324687

@@ -15,7 +15,6 @@ import {
   Save,
   X
 } from 'lucide-react'
-import Cookies from 'js-cookie'
 
 export default function AdminDashboard() {
   const [users, setUsers] = useState([])
@@ -29,8 +28,9 @@ export default function AdminDashboard() {
   const router = useRouter()
 
   useEffect(() => {
-    const token = Cookies.get('admin_token')
-    if (!token) {
+    // Simple cookie check instead of JWT token
+    const cookies = document.cookie
+    if (!cookies.includes('admin_logged_in=true')) {
       router.push('/admin')
       return
     }
@@ -38,20 +38,14 @@ export default function AdminDashboard() {
   }, [])
 
   const loadData = async () => {
-    const token = Cookies.get('admin_token')
-    
     try {
       // Load users
-      const usersResponse = await fetch('/api/admin/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const usersResponse = await fetch('/api/admin/users')
       const usersData = await usersResponse.json()
       setUsers(usersData)
 
       // Load tasks
-      const tasksResponse = await fetch('/api/admin/tasks', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const tasksResponse = await fetch('/api/admin/tasks')
       const tasksData = await tasksResponse.json()
       setTasks(tasksData)
 
@@ -70,19 +64,17 @@ export default function AdminDashboard() {
   }
 
   const handleLogout = () => {
-    Cookies.remove('admin_token')
+    // Clear the simple cookie
+    document.cookie = 'admin_logged_in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     router.push('/admin')
   }
 
   const updateUserBalance = async (userId, newBalance) => {
-    const token = Cookies.get('admin_token')
-    
     try {
       const response = await fetch('/api/admin/users', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ id: userId, balance: parseInt(newBalance) })
       })
@@ -96,14 +88,11 @@ export default function AdminDashboard() {
   }
 
   const createTask = async () => {
-    const token = Cookies.get('admin_token')
-    
     try {
       const response = await fetch('/api/admin/tasks', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           title: newTask.title,
@@ -123,14 +112,11 @@ export default function AdminDashboard() {
   }
 
   const updateTask = async (task) => {
-    const token = Cookies.get('admin_token')
-    
     try {
       const response = await fetch('/api/admin/tasks', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(task)
       })
@@ -147,14 +133,11 @@ export default function AdminDashboard() {
   const deleteTask = async (taskId) => {
     if (!confirm('Are you sure you want to delete this task?')) return
     
-    const token = Cookies.get('admin_token')
-    
     try {
       const response = await fetch('/api/admin/tasks', {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ id: taskId })
       })

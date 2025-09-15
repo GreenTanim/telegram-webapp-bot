@@ -1,167 +1,76 @@
-<<<<<<< HEAD
-import { requireAuth } from '../../../lib/auth'
 import { supabase } from '../../../lib/supabase'
 
-async function handler(req, res) {
+function isAdminAuthenticated(req) {
+  const cookies = req.headers.cookie || ''
+  return cookies.includes('admin_logged_in=true')
+}
+
+export default async function handler(req, res) {
+  // Check authentication
+  if (!isAdminAuthenticated(req)) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
   if (req.method === 'GET') {
     try {
-      const { data: tasks, error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .order('created_at', { ascending: false })
 
       if (error) throw error
-
-      res.status(200).json(tasks)
+      return res.status(200).json(data)
     } catch (error) {
-      console.error('Error fetching tasks:', error)
-      res.status(500).json({ error: 'Failed to fetch tasks' })
+      return res.status(500).json({ error: error.message })
     }
-  } else if (req.method === 'POST') {
-    try {
-      const { title, description, reward } = req.body
+  }
 
-      const { data: task, error } = await supabase
+  if (req.method === 'POST') {
+    const { title, description, reward } = req.body
+
+    try {
+      const { error } = await supabase
         .from('tasks')
-        .insert([
-          {
-            title,
-            description,
-            reward,
-            active: true
-          }
-        ])
-        .select()
-        .single()
+        .insert([{ title, description, reward, active: true }])
 
       if (error) throw error
-
-      res.status(201).json(task)
+      return res.status(201).json({ success: true })
     } catch (error) {
-      console.error('Error creating task:', error)
-      res.status(500).json({ error: 'Failed to create task' })
+      return res.status(500).json({ error: error.message })
     }
-  } else if (req.method === 'PUT') {
-    try {
-      const { id, title, description, reward, active } = req.body
+  }
 
-      const { data: task, error } = await supabase
+  if (req.method === 'PUT') {
+    const { id, title, description, reward, active } = req.body
+
+    try {
+      const { error } = await supabase
         .from('tasks')
         .update({ title, description, reward, active })
         .eq('id', id)
-        .select()
-        .single()
 
       if (error) throw error
-
-      res.status(200).json(task)
+      return res.status(200).json({ success: true })
     } catch (error) {
-      console.error('Error updating task:', error)
-      res.status(500).json({ error: 'Failed to update task' })
+      return res.status(500).json({ error: error.message })
     }
-  } else if (req.method === 'DELETE') {
-    try {
-      const { id } = req.body
+  }
 
+  if (req.method === 'DELETE') {
+    const { id } = req.body
+
+    try {
       const { error } = await supabase
         .from('tasks')
         .delete()
         .eq('id', id)
 
       if (error) throw error
-
-      res.status(200).json({ success: true })
+      return res.status(200).json({ success: true })
     } catch (error) {
-      console.error('Error deleting task:', error)
-      res.status(500).json({ error: 'Failed to delete task' })
+      return res.status(500).json({ error: error.message })
     }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' })
   }
+
+  return res.status(405).json({ error: 'Method not allowed' })
 }
-
-export default requireAuth(handler)
-=======
-import { requireAuth } from '../../../lib/auth'
-import { supabase } from '../../../lib/supabase'
-
-async function handler(req, res) {
-  if (req.method === 'GET') {
-    try {
-      const { data: tasks, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-
-      res.status(200).json(tasks)
-    } catch (error) {
-      console.error('Error fetching tasks:', error)
-      res.status(500).json({ error: 'Failed to fetch tasks' })
-    }
-  } else if (req.method === 'POST') {
-    try {
-      const { title, description, reward } = req.body
-
-      const { data: task, error } = await supabase
-        .from('tasks')
-        .insert([
-          {
-            title,
-            description,
-            reward,
-            active: true
-          }
-        ])
-        .select()
-        .single()
-
-      if (error) throw error
-
-      res.status(201).json(task)
-    } catch (error) {
-      console.error('Error creating task:', error)
-      res.status(500).json({ error: 'Failed to create task' })
-    }
-  } else if (req.method === 'PUT') {
-    try {
-      const { id, title, description, reward, active } = req.body
-
-      const { data: task, error } = await supabase
-        .from('tasks')
-        .update({ title, description, reward, active })
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      res.status(200).json(task)
-    } catch (error) {
-      console.error('Error updating task:', error)
-      res.status(500).json({ error: 'Failed to update task' })
-    }
-  } else if (req.method === 'DELETE') {
-    try {
-      const { id } = req.body
-
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-
-      res.status(200).json({ success: true })
-    } catch (error) {
-      console.error('Error deleting task:', error)
-      res.status(500).json({ error: 'Failed to delete task' })
-    }
-  } else {
-    res.status(405).json({ error: 'Method not allowed' })
-  }
-}
-
-export default requireAuth(handler)
->>>>>>> ab0bea77bf4ea80bfdb82b515bed3d52fb324687
