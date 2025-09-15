@@ -9,13 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.4",
-    "bcryptjs": "^3.0.2",
+    "@supabase/supabase-js": "^2.45.0",
+    "bcryptjs": "^2.4.3",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^0.294.0",
-    "next": "14.0.4",
-    "node-telegram-bot-api": "^0.64.0",
+    "lucide-react": "^0.427.0",
+    "next": "14.2.5",
+    "node-telegram-bot-api": "^0.66.0",
     "react": "^18",
     "react-dom": "^18"
   },
