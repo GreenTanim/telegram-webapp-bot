@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 
 export default function Home() {
   const [user, setUser] = useState(null)
-  const [balance, setBalance] = useState(0)
+  const [balance, setBalance] = useState(100)
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -37,7 +37,7 @@ export default function Home() {
         .single()
 
       if (!existingUser) {
-        // Create new user
+        // Create new user with 100 pixels default balance
         const { data: newUser } = await supabase
           .from('users')
           .insert([
@@ -46,13 +46,13 @@ export default function Home() {
               username: telegramUser.username,
               first_name: telegramUser.first_name,
               last_name: telegramUser.last_name,
-              balance: 0
+              balance: 100
             }
           ])
           .select()
           .single()
         
-        setBalance(0)
+        setBalance(100)
       } else {
         setBalance(existingUser.balance)
       }
@@ -111,6 +111,15 @@ export default function Home() {
     }
   }
 
+  // Get user profile photo URL
+  const getProfilePhotoUrl = (user) => {
+    if (user?.photo_url) {
+      return user.photo_url
+    }
+    // Fallback to Telegram API for profile photo
+    return `https://t.me/i/userpic/320/${user?.username || 'default'}.jpg`
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -123,10 +132,24 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-        {/* User Info - Top Left */}
+        {/* User Info with Profile Picture - Top Left */}
         <div className="flex items-center space-x-3">
-          <div className="bg-white/20 p-2 rounded-full">
-            <User className="w-6 h-6 text-white" />
+          <div className="relative">
+            {user ? (
+              <img
+                src={getProfilePhotoUrl(user)}
+                alt="Profile"
+                className="w-12 h-12 rounded-full border-2 border-white/30"
+                onError={(e) => {
+                  // Fallback to icon if image fails to load
+                  e.target.style.display = 'none'
+                  e.target.nextSibling.style.display = 'flex'
+                }}
+              />
+            ) : null}
+            <div className="bg-white/20 p-2 rounded-full w-12 h-12 flex items-center justify-center" style={{display: user ? 'none' : 'flex'}}>
+              <User className="w-6 h-6 text-white" />
+            </div>
           </div>
           <div className="text-white">
             <div className="font-semibold">
@@ -141,7 +164,7 @@ export default function Home() {
         {/* Balance - Top Right */}
         <div className="flex items-center space-x-2 bg-yellow-400/20 px-4 py-2 rounded-full">
           <Coins className="w-5 h-5 text-yellow-300" />
-          <span className="text-white font-bold">{balance} Pixels</span>
+          <span className="text-white font-bold">Balance: {balance} Pixels</span>
         </div>
       </div>
 
